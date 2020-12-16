@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <style>
+        #videoElement {
+            border: 30px solid #ccc;
+            background: green;
+            width: 400px;
+            height: 400px
+        }
+    </style>
+</head>
+<body>
+    <div class="grid">
+        <form action="." method="POST" class="form login"> {% csrf_token %}
+
+           <video autoplay id="videoElement"></video>
+
+           <script type="text/javascript">
+                var video = document.querySelector("#videoElement");
+                navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUsermedia
+                    || navigator.mozGetUserMedia || navigato.msGetUserMedia || navigator.oGetUserMedia;
+
+                    if(navigator.getUserMedia){
+                      navigator.getUserMedia({video:true}, handleVideo, videoError)
+                    }
+
+                    function handleVideo(stream){
+                    video.srcObject = stream;
+                    video.play();
+                    }
+
+                    function videoError(e){}
+           </script>
+
+            <div class="input-group media">
+                <span class="glyphicon glyphicon-user" ></span>
+                <input type="text" name="voterid" placeholder="Voter ID" autofocus required id="id_voterid">
+            </div>
+
+            <div class="input-group media">
+                <span class="glyphicon glyphicon-lock" ></span>
+                <input type="password" name="otp" placeholder="OTP" required id="id_otp">
+            </div>
+
+            <button class="open-button btn btn-primary media" type="submit">Sign In</button>
+        </form>
+    </div>
+</body>
+</html>

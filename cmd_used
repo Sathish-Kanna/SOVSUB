@@ -1,0 +1,29 @@
+pip install Django
+pip install numpy
+sudo apt-get install build-essential cmake pkg-config
+sudo apt-get install libx11-dev libatlas-base-dev
+sudo apt-get install libgtk-3-dev libboost-python-dev
+wget http://dlib.net/files/dlib-19.21.tar.bz2
+tar xvf dlib-19.21.tar.bz2
+cd dlib-19.21/
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+sudo make install
+sudo ldconfig
+cd ..
+pkg-config --libs --cflags dlib-1
+python setup.py install
+rm -rf dist
+rm -rf tools/python/build
+cd ..
+pip install dlib
+pip install opencv_python
+pip install face_recognition
+django-admin startproject SOVSUB
+mv -v ./SOVSUB/manage.py ./
+mv -v ./SOVSUB/SOVSUB/* ./SOVSUB/
+rm -rf ./SOVSUB/SOVSUB
+pip install requests
+pip install pycrypto

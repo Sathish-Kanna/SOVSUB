@@ -1,0 +1,5 @@
+# Project exclude paths
+/venv/
+/dlib-19.21/
+/db.sqlite3
+
