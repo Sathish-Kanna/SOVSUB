@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 from requests import post as request_post
 
 from support.signature import sign
+from users.models import Profile
 
 
 # home view
@@ -17,9 +19,10 @@ def home_view(request, *args, **kwargs):
 
 
 # vote cast view
+@login_required
 def vote_cast_view(request, *args, **kwargs):
-
-    if request.POST:
+    voter = Profile.objects.get(voter_id=request.user.voter_id)
+    if request.POST and voter.registered:
         data = {
             "tempid": request.POST.get('tempid'),
             "voted": request.POST.get('voted'),

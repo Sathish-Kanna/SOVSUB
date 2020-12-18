@@ -1,59 +1,51 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
+from django.shortcuts import render
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout, login, authenticate
-from django.views.generic import DetailView
-from django.core.mail import send_mail
-import os
+from django.contrib.auth import logout, login
+import json
+import pickle
 
+from twilio.rest import Client
 import face_recognition
 import cv2
-import math
 import random
-
-'''from .form import UserRegisterForm
-from .form import ProfileUpdateForm
-from .form import UserServiceForm
-from .models import Service, Profile
-from chevai.operation import get_notification'''
-
-
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
 
 from .forms import LoginForm
 from .models import Profile
 
 
-def otpmatch(voter, otp):
-    return True
+def otpmatch(voter_id, otp):
+    voter = Profile.objects.get(voter_id=voter_id)
+    return otp == voter.get('password')
 
 
-def facematch(loc):
-    cam = cv2.VideoCapture(0)
-    s, img = cam.read()
-    if s:
+def facematch(voter_id):
+    # define a video capture object
+    video_feed = cv2.VideoCapture(0)
+    # Capture the video frame by frame
+    rtn_tru, img = video_feed.read()
 
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        MEDIA_ROOT = os.path.join(BASE_DIR, 'pages')
+    if rtn_tru:
+        # read encoded face of voter from dataset
+        with open("./face_encodings/encodings.pickle", "rb") as f:
+            data = pickle.loads(f.read())
+        encoded_face_ds = data.get(voter_id)
 
-        loc = (str(MEDIA_ROOT) + loc)
-        face_1_image = face_recognition.load_image_file(loc)
-        face_1_face_encoding = face_recognition.face_encodings(face_1_image)[0]
-
+        # resize image
         small_frame = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
-
         rgb_small_frame = small_frame[:, :, ::-1]
-
+        # locate face in resized image
         face_locations = face_recognition.face_locations(rgb_small_frame)
+        # encode the located face
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
-        check = face_recognition.compare_faces(face_1_face_encoding, face_encodings)
+        # compare the encoded face with encoded face dataset
+        check = face_recognition.compare_faces(encoded_face_ds, face_encodings)
 
         print(check)
         if check[0]:
             return True
-
         else:
             return False
 
@@ -64,14 +56,8 @@ def login_view(request, *args, **kwargs):
         if form.is_valid():
             data = form.cleaned_data
             print(data)
-            voter = Profile.objects.get(voter_id=data.get("voter_id"))
             # validate voter
-            if facematch(data.get("image")) and otpmatch(data.get("otp")):
-                """if voter.registered:
-                    login(request, voter)
-                    return redirect('vote_cast_view')
-                else:
-                    return redirect('intermediate_view')"""
+            if facematch(data.get("image")) and otpmatch(data.get("voter_id"), data.get("otp")):
                 return redirect('intermediate_view')
         messages.error(request, 'Login failed..!')
     else:
@@ -82,12 +68,49 @@ def login_view(request, *args, **kwargs):
 
 def generate_otp_view(request, *args, **kwargs):
     if request.POST:
+        # env.json is the file with twilio and other credentials
+        with open("env.json") as json_file:
+            env = json.load(json_file)
+        account_sid = env.get('TWILIO_ACCOUNT_SID')
+        auth_token = env.get('TWILIO_AUTH_TOKEN')
+        client = Client(account_sid, auth_token)
+
         data = request.POST.get("voter_id")
-        # save otp in password field
-        otp = '111111'  # generate_otp(data.get("voter_id"))
+        # fetch the voter data from database
         voter = Profile.objects.get(voter_id=data.get("voter_id"))
+
+        # generate otp for verification
+        msg_bdy = "Your OTP is: "
+        otp = ''
+        for i in range(6):
+            otp += str(random.randint(1, 9))
+
+        # save otp in password field
         voter.set_password(otp)
         voter.save()
+
+        # create and send otp message to voter
+        message = client.messages.create(
+            body=msg_bdy+otp,               # message data
+            from_=env.get('TWILIO_NUM'),    # your number
+            to=str(voter.phone_number)      # voter mobile number
+        )
+        print(message.sid)
+
+
+@login_required
+def intermediate_view(request, *args, **kwargs):
+    if request.POST:
+        voter = Profile.objects.get(voter_id=request.user.voter_id)
+        if request.POST.get('op') == 'vote_cast':
+            if voter.registered:
+                login(request, voter)
+                return redirect('vote_cast_view')
+            else:
+                return redirect('intermediate_view')
+        elif request.POST.get('op') == 'register':
+            return redirect('register_to_vote_view')
+    return
 
 
 @login_required
