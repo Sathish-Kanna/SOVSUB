@@ -33,6 +33,4 @@ urlpatterns = [
     path('register_with/', register_with_existing_node, name='register with existing node'),
     path('add_block/', verify_and_add_block, name='verify and add block'),
     path('pending_tx/', get_pending_tx, name='get pending tx'),
-    path('pending_tx/', get_pending_tx, name='get_pending_tx'),
-    path('pending_tx/', get_pending_tx, name='get_pending_tx'),
 ]
