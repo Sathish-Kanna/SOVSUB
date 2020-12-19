@@ -104,23 +104,6 @@ def generate_otp_view(request, *args, **kwargs):
         print(message.sid)
 
 
-# endpoint to return intermediate page
-# this is intermediate page after login page where voter can register, vote, view transaction and results
-# /intermediate_view
-@login_required
-def intermediate_view(request, *args, **kwargs):
-    if request.POST:
-        if request.POST.get('op') == 'vote_cast':
-            return redirect('vote_cast_view')
-        elif request.POST.get('op') == 'register':
-            return redirect('register_to_vote_view')
-        elif request.POST.get('op') == 'result_view':
-            return redirect('result_view')
-        elif request.POST.get('op') == 'transaction_view':
-            return redirect('transaction_view')
-    return render(request, 'intermediate_page.html')
-
-
 # endpoint to register for voting
 # this is used for the registration of the voters for election
 # /register_to_vote_view
