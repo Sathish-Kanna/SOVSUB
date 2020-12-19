@@ -18,11 +18,11 @@ from django.urls import path
 from .views import login_view
 from .views import generate_otp_view
 from .views import register_to_vote_view
-from .views import intermediate_view
+from .views import logout_view
 
 urlpatterns = [
     path('login_view/', login_view, name='login view'),
     path('generate_otp_view/', generate_otp_view, name='generate otp view'),
     path('register_to_vote_view/', register_to_vote_view, name='register to vote view'),
-    path('intermediate_view/', intermediate_view, name='intermediate view'),
+    path('logout_view/', logout_view, name='logout view'),
 ]
