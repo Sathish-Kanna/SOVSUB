@@ -50,6 +50,9 @@ def facematch(voter_id):
             return False
 
 
+# endpoint to login voters
+# This will be used by our application to authenticate the voters
+# /login_view
 def login_view(request, *args, **kwargs):
     if request.POST:
         form = LoginForm(request.POST)
@@ -66,6 +69,9 @@ def login_view(request, *args, **kwargs):
     return render(request, 'login_page.html', {'form': form})
 
 
+# endpoint to generate otp
+# we use this to generate otp from login page
+# /generate_otp_view
 def generate_otp_view(request, *args, **kwargs):
     if request.POST:
         # env.json is the file with twilio and other credentials
@@ -98,21 +104,26 @@ def generate_otp_view(request, *args, **kwargs):
         print(message.sid)
 
 
+# endpoint to return intermediate page
+# this is intermediate page after login page where voter can register, vote, view transaction and results
+# /intermediate_view
 @login_required
 def intermediate_view(request, *args, **kwargs):
     if request.POST:
-        voter = Profile.objects.get(voter_id=request.user.voter_id)
         if request.POST.get('op') == 'vote_cast':
-            if voter.registered:
-                login(request, voter)
-                return redirect('vote_cast_view')
-            else:
-                return redirect('intermediate_view')
+            return redirect('vote_cast_view')
         elif request.POST.get('op') == 'register':
             return redirect('register_to_vote_view')
-    return
+        elif request.POST.get('op') == 'result_view':
+            return redirect('result_view')
+        elif request.POST.get('op') == 'transaction_view':
+            return redirect('transaction_view')
+    return render(request, 'intermediate_page.html')
 
 
+# endpoint to register for voting
+# this is used for the registration of the voters for election
+# /register_to_vote_view
 @login_required
 def register_to_vote_view(request, *args, **kwargs):
     if request.POST:
