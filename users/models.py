@@ -8,6 +8,18 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
+class Candidate(models.Model):
+    candidate_id = models.CharField(max_length=10, blank=True)
+    name = models.CharField(max_length=100, blank=True)
+    booth_id = models.TextField(max_length=10, blank=True)
+    otp = models.CharField(max_length=6, blank=True)
+    otp_time = models.CharField()
+    phone_regex = RegexValidator(regex=r'^\+?\d{10,12}$',
+                                 message='Phone number must be entered in the format: "+919876543210"')
+    phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True)
+    image = models.ImageField(upload_to='candidate_img')
+
+
 class Profile(models.Model):
     voter_id = models.CharField(max_length=10, blank=True)
     name = models.CharField(max_length=100, blank=True)
