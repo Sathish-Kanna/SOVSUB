@@ -120,6 +120,7 @@ def register_to_vote_view(request, *args, **kwargs):
     return redirect('intermediate_view')
 
 
+# /logout_view
 @login_required
 def logout_view(request):
     logout(request)
