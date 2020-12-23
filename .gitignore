@@ -1,6 +1,9 @@
 # Project exclude paths
 /venv/
 /dlib-19.21/
+/appmain/migrations/
+/miner/migrations/
+/users/migrations/
 /db.sqlite3
 /env.json
 

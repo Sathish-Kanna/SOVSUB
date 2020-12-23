@@ -5,6 +5,7 @@ from requests import get as request_get
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from appmain.models import KeyModel
 from support.signature import verify
 from support.blockchain_platform import Block
 from support.blockchain_platform import Blockchain
@@ -20,7 +21,7 @@ peers = set()
 
 # endpoint to submit a new transaction.
 # This will be used by our application to add new data (posts) to the blockchain
-# @app.route('/new_transaction', methods=['POST'])
+# /new_transaction
 @csrf_exempt
 def set_new_transaction(request, *args, **kwargs):
     tx_data = request.POST
@@ -31,7 +32,7 @@ def set_new_transaction(request, *args, **kwargs):
             return HttpResponse("Invalid transaction data", 404)
     data = eval(tx_data.get('data'))
     signature = tx_data.get('signature')[0]
-    pukey = ''  #TODO: get publickey from database for 'tempid'
+    pukey = KeyModel.objects.get('tempid').get('pukey')
 
     if verify(pukey, data, signature):
         data["signature"] = signature
@@ -43,7 +44,7 @@ def set_new_transaction(request, *args, **kwargs):
 
 # endpoint to submit a new transaction.
 # This will be used by our application to add new data (posts) to the blockchain
-# @app.route('/update_transaction', methods=['POST'])
+# /update_transaction
 @csrf_exempt
 def update_transaction(request, *args, **kwargs):
     for peer in peers:
@@ -53,18 +54,21 @@ def update_transaction(request, *args, **kwargs):
 
 # endpoint to return the node's copy of the chain.
 # Our application will be using this endpoint to query all the posts to display.
-# @app.route('/chain', methods=['GET'])
+# /chain
 def get_chain(request, *args, **kwargs):
     chain_data = []
     for block in blockchain.chain:
         chain_data.append(block.__dict__)
 
-    return HttpResponse(json.dumps({"length": len(chain_data), "chain": chain_data, "peers": list(peers)}))
+    return HttpResponse(json.dumps({
+        "length": len(chain_data),
+        "chain": chain_data,
+        "peers": list(peers)}))
 
 
 # endpoint to request the node to mine the unconfirmed transactions (if any).
 # We'll be using it to initiate a command to mine from our application itself.
-# @app.route('/mine', methods=['GET'])
+# /mine
 def mine_unconfirmed_transactions(request, *args, **kwargs):
     result = blockchain.mine()
     if not result:
@@ -80,7 +84,7 @@ def mine_unconfirmed_transactions(request, *args, **kwargs):
 
 
 # endpoint to add new peers to the network.
-# @app.route('/register_node', methods=['POST'])
+# /register_node
 @csrf_exempt
 def register_new_peers(request, *args, **kwargs):
     node_address = request.POST.get("node_address")
@@ -97,7 +101,7 @@ def register_new_peers(request, *args, **kwargs):
     return HttpResponse(get_chain(request))
 
 
-# @app.route('/register_with', methods=['POST'])
+# /register_with
 @csrf_exempt
 def register_with_existing_node(request, *args, **kwargs):
     """
@@ -114,7 +118,8 @@ def register_with_existing_node(request, *args, **kwargs):
     headers = {'Content-Type': "application/json"}
 
     # Make a request to register with remote node and obtain information
-    response = request_post("http://" + reg_w + "/miner/register_node/", data=json.dumps(data), headers=headers)
+    url = "http://" + reg_w + "/miner/register_node/"
+    response = request_post(url, data=json.dumps(data), headers=headers)
     # response = register_new_peers(request)
 
     if response.status_code == 200:
@@ -125,35 +130,17 @@ def register_with_existing_node(request, *args, **kwargs):
         blockchain = create_chain_from_dump(chain_dump)
         peers.update(json.loads(response.content)['peers'])
         for peer in peers:
-            response = request_post("http://" + peer + "/miner/register_node/", data=json.dumps(data), headers=headers)
+            url = "http://" + peer + "/miner/register_node/"
+            response = request_post(url, data=json.dumps(data), headers=headers)
         return HttpResponse("Registration successful", 200)
     else:
         # if something goes wrong, pass it on to the API response
         return HttpResponse(response.content, response.status_code)
 
 
-def create_chain_from_dump(chain_dump):
-    generated_blockchain = Blockchain()
-    generated_blockchain.create_genesis_block()
-    for idx, block_data in enumerate(chain_dump):
-        if idx == 0:
-            continue  # skip genesis block
-        block = Block(block_data["height"],
-                      block_data["transactions"],
-                      block_data["cumulated"],
-                      block_data["timestamp"],
-                      block_data["previous_hash"],
-                      block_data["nonce"])
-        proof = block_data['hash']
-        added = blockchain.add_block(block, proof)
-        if not added:
-            raise Exception("The chain dump is tampered!!")
-    return blockchain
-
-
 # endpoint to add a block mined by someone else to the node's chain.
 # The block is first verified by the node and then added to the chain.
-# @app.route('/add_block', methods=['POST'])
+# /add_block
 @csrf_exempt
 def verify_and_add_block(request, *args, **kwargs):
     if request.POST:
@@ -180,9 +167,28 @@ def verify_and_add_block(request, *args, **kwargs):
 
 
 # endpoint to query unconfirmed transactions
-# @app.route('/pending_tx')
+# /pending_tx
 def get_pending_tx():
     return json.dumps(blockchain.unconfirmed_transactions)
+
+
+def create_chain_from_dump(chain_dump):
+    generated_blockchain = Blockchain()
+    generated_blockchain.create_genesis_block()
+    for idx, block_data in enumerate(chain_dump):
+        if idx == 0:
+            continue  # skip genesis block
+        block = Block(block_data["height"],
+                      block_data["transactions"],
+                      block_data["cumulated"],
+                      block_data["timestamp"],
+                      block_data["previous_hash"],
+                      block_data["nonce"])
+        proof = block_data['hash']
+        added = blockchain.add_block(block, proof)
+        if not added:
+            raise Exception("The chain dump is tampered!!")
+    return blockchain
 
 
 def consensus():

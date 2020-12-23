@@ -18,10 +18,12 @@ from django.urls import path
 from django.urls import include
 
 from appmain import urls as appmain_urls
+from users import urls as users_urls
 from miner import urls as miner_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(appmain_urls)),
     path('miner/', include(miner_urls)),
+    path('user/', include(users_urls)),
 ]

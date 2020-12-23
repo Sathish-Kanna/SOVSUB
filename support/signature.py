@@ -1,31 +1,22 @@
-from Crypto.PublicKey import RSA
-from Crypto import Random
-import base64
+import random
+
+from ecies import encrypt
+from ecies import decrypt
+from ecies.utils import generate_eth_key
+from Crypto.Hash import SHA256
 
 
-def rsakeys():
-    length = 1024
-    privatekey = RSA.generate(length, Random.new().read)
-    publickey = privatekey.publickey()
-    return privatekey, publickey
-
-
-def encrypt(rsa_publickey, plain_text):
-    cipher_text = rsa_publickey.encrypt(plain_text, 32)[0]
-    b64cipher = base64.b64encode(cipher_text)
-    return b64cipher
-
-
-def decrypt(rsa_privatekey, b64cipher):
-    decoded_ciphertext = base64.b64decode(b64cipher)
-    plaintext = rsa_privatekey.decrypt(decoded_ciphertext)
-    return plaintext
+def key_generator(voter_id):
+    t_id = SHA256.new(voter_id+str(random.randint(1000, 9999)))
+    eth_k = generate_eth_key()
+    sk_hex = eth_k.to_hex()  # hex string
+    pk_hex = eth_k.public_key.to_hex()  # hex string
+    return t_id, sk_hex, pk_hex
 
 
 def sign(privatekey, data):
-    return base64.b64encode(str((privatekey.sign(data, ''))[0]).encode())
+    return encrypt(privatekey, SHA256.new(data))
 
 
 def verify(publickey, data, sign):
-    # return publickey.verify(data, (int(base64.b64decode(sign)),))
-    return True
+    return decrypt(publickey, sign) == SHA256.new(data)

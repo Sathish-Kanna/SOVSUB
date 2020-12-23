@@ -25,12 +25,12 @@ from .views import verify_and_add_block
 from .views import get_pending_tx
 
 urlpatterns = [
-    path('update_transaction/', update_transaction, name='update transaction'),
-    path('new_transaction/', set_new_transaction, name='set new transaction'),
-    path('chain/', get_chain, name='get chain'),
-    path('mine/', mine_unconfirmed_transactions, name='mine unconfirmed transactions'),
-    path('register_node/', register_new_peers, name='register new peers'),
-    path('register_with/', register_with_existing_node, name='register with existing node'),
-    path('add_block/', verify_and_add_block, name='verify and add block'),
-    path('pending_tx/', get_pending_tx, name='get pending tx'),
+    path('update_transaction/', update_transaction, name='update_transaction'),
+    path('new_transaction/', set_new_transaction, name='set_new_transaction'),
+    path('chain/', get_chain, name='get_chain'),
+    path('mine/', mine_unconfirmed_transactions, name='mine_unconfirmed_transactions'),
+    path('register_node/', register_new_peers, name='register_new_peers'),
+    path('register_with/', register_with_existing_node, name='register_with_existing_node'),
+    path('add_block/', verify_and_add_block, name='verify_and_add_block'),
+    path('pending_tx/', get_pending_tx, name='get_pending_tx'),
 ]

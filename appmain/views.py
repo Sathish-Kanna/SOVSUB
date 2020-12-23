@@ -4,8 +4,66 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from requests import post as request_post
 
-from support.signature import sign
 from users.models import Profile
+from users.models import Candidate
+
+
+# endpoint to return intermediate page
+# this page redirects to register, vote, view transaction and results pages based on request
+# /intermediate_view
+@login_required
+def intermediate_view(request, *args, **kwargs):
+    if request.POST:
+        if request.POST.get('op') == 'vote_cast':
+            return redirect('vote_cast')
+        elif request.POST.get('op') == 'register':
+            return redirect('register_to_vote_view')
+        elif request.POST.get('op') == 'election_result':
+            return redirect('election_result')
+        elif request.POST.get('op') == 'transaction_view':
+            return redirect('transaction_view')
+    return render(request, 'intermediate_page.html')
+
+
+# endpoint to cast vote during election
+# here vote is casted on registered candidates
+# /vote_cast_view
+@login_required
+def vote_cast_view(request, *args, **kwargs):
+    candidates = Candidate.objects.all()
+    print(request.user.__dict__)
+    voter = Profile.objects.get(voter_id=request.user.profile.voter_id)
+    if not voter.registered:
+        print("not registered")
+        return redirect('intermediate_view')
+
+    elif request.POST:
+        data = {
+            "tempid": request.POST.get('tempid'),
+            "voted": request.POST.get('voted'),
+            "timestamp": request.POST.get('timestamp'),
+        }
+        post_data = {
+            "data": str(data),
+            "signature": request.POST.get('signature'),
+        }
+        url = 'http://'+str(request.META['HTTP_HOST'])+'/miner/update_transaction/'
+        response = request_post(url, data=post_data)
+        content = response.content
+
+    return render(request, "votecast_page.html", {'candidates': candidates})
+
+
+# election result view
+def election_result_view(request, *args, **kwargs):
+    cumulated = 'cumulated'  # last_block()
+    return render(request, "result_page.html", {'cumulated': cumulated})
+
+
+# election result view
+def transaction_view(request, *args, **kwargs):
+    transactions = 'trans'  # all_transaction_in_block()
+    return render(request, "transaction_page.html", {'transactions': transactions})
 
 
 # home view
@@ -16,26 +74,6 @@ def home_view(request, *args, **kwargs):
         if voterid == '1':  # valid_user(voterid, otp):
             return redirect('vote cast')
     return render(request, "home_page.html", {})
-
-
-# vote cast view
-@login_required
-def vote_cast_view(request, *args, **kwargs):
-    voter = Profile.objects.get(voter_id=request.user.voter_id)
-    if request.POST and voter.registered:
-        data = {
-            "tempid": request.POST.get('tempid'),
-            "voted": request.POST.get('voted'),
-            "timestamp": request.POST.get('timestamp'),
-        }
-        post_data = {
-            "data": str(data),
-            "signature": request.POST.get('signature'),
-        }
-        response = request_post("http://"+str(request.META['HTTP_HOST'])+'/miner/update_transaction/', data=post_data)
-        content = response.content
-
-    return render(request, "votecast_page.html", {})
 
 
 # reg
@@ -51,10 +89,3 @@ def reg(request, *args, **kwargs):
             print("pears updated")
         return HttpResponse(content)
     return render(request, "register.html", {})
-
-
-# election result view
-def election_result_view(request, *args, **kwargs):
-    if request.POST:
-        print(request)
-    return HttpResponse("Election Result")
