@@ -17,6 +17,7 @@ blockchain.create_genesis_block()
 
 # the address to other participating members of the network
 peers = set()
+trcr_ip = "127.0.0.1:8000"
 
 
 # endpoint to submit a new transaction.
@@ -32,11 +33,15 @@ def set_new_transaction(request, *args, **kwargs):
             return HttpResponse("Invalid transaction data", 404)
     data = eval(tx_data.get('data'))
     signature = tx_data.get('signature')[0]
-    pukey = KeyModel.objects.get('tempid').get('pukey')
+    pukey = KeyModel.objects.get(temp_id=data.get('tempid')).__dict__.get("pukey")
 
-    if verify(pukey, data, signature):
+    if verify(pukey, data, signature) and pukey:
         data["signature"] = signature
         blockchain.add_new_transaction(str(data))
+
+        # remove the KeyModel of that voter so next time the user can't vote
+        keymodel = KeyModel.objects.get('tempid')
+        keymodel.delete()
         return HttpResponse("Success", 201)
     else:
         return HttpResponse("Unauthorized transaction data", 401)
@@ -47,8 +52,12 @@ def set_new_transaction(request, *args, **kwargs):
 # /update_transaction
 @csrf_exempt
 def update_transaction(request, *args, **kwargs):
+    global peers
+    print(peers)
+    if not peers:
+        peers = request_post("http://" + trcr_ip + "/miner/chain/", POST=request.POST)
     for peer in peers:
-        request_post("http://" + peer + "/miner/new_transaction/", data=request.POST)
+        request_post("http://" + peer + "/miner/new_transaction/", POST=request.POST)
     return HttpResponse("Unauthorized transaction data", 200)
 
 

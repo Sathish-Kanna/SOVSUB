@@ -8,28 +8,21 @@
     <div class="grid">
         <form action="." method="POST" class="form votecast"> {% csrf_token %}
 
-            <div class="input-group media">
-                <span class="glyphicon glyphicon-user" ></span>
-                <input type="text" name="tempid" placeholder="Temp ID" autofocus required id="id_tempid">
-            </div>
-            <div class="input-group media">
-                <span class="glyphicon glyphicon-lock" ></span>
-                <input type="text" name="voted" placeholder="Candidate" required id="id_voted">
-            </div>
-            <div class="input-group media">
-                <input type="hidden" name="timestamp" placeholder="Time stamp" id="id_timestamp">
-                <script>
-                    var d = new Date();
-                    document.getElementById("id_timestamp").value  = + d;
-                </script>
-            </div>
-            <div class="input-group media">
-                <input type="hidden" name="signature" placeholder="signature" id="id_signature">
-                <script>
-                    var d = new Date();
-                    document.getElementById("id_signature").value  = + d;
-                </script>
-            </div>
+            <input type="text" name="tempid" placeholder="Temp ID" autofocus required id="id_tempid">
+            <select class="btn " id="id_voted" name="voted" title="Candidate">
+                <option selected="selected" value="nota">Nota</option>
+                {% if candidates %}
+                    {% for candidate in candidates %}
+                        <option value={{candidate.candidate_id}}>{{candidate.name}}</option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+            <input type="text" name="sk_hex" placeholder="Private key" autofocus required id="id_sk_hex">
+            <input type="hidden" name="timestamp" placeholder="Time stamp" id="id_timestamp">
+            <script>
+                var d = new Date();
+                document.getElementById("id_timestamp").value  = + d;
+            </script>
 
             <button class="open-button btn btn-primary media" type="submit">Vote</button>
         </form>

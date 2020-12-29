@@ -6,6 +6,9 @@ from requests import post as request_post
 
 from users.models import Profile
 from users.models import Candidate
+from .models import KeyModel
+from support.signature import sign
+from support.signature import verify
 
 
 # endpoint to return intermediate page
@@ -31,7 +34,6 @@ def intermediate_view(request, *args, **kwargs):
 @login_required
 def vote_cast_view(request, *args, **kwargs):
     candidates = Candidate.objects.all()
-    print(request.user.__dict__)
     voter = Profile.objects.get(voter_id=request.user.profile.voter_id)
     if not voter.registered:
         print("not registered")
@@ -43,9 +45,20 @@ def vote_cast_view(request, *args, **kwargs):
             "voted": request.POST.get('voted'),
             "timestamp": request.POST.get('timestamp'),
         }
+        sk_str = request.POST.get('sk_hex')
+        t = ''
+        i = 0
+        for x in sk_str.split("-----")[:-1]:
+            i += 1
+            if i == 3:
+                t += x.replace(" ", "\n") + "-----"
+            else:
+                t += x + "-----"
+        signature = sign(sk_str=t, data=data)
+        vk_str = KeyModel.objects.get(temp_id=request.POST.get('tempid')).__dict__.get("pukey")
         post_data = {
             "data": str(data),
-            "signature": request.POST.get('signature'),
+            "signature": signature,
         }
         url = 'http://'+str(request.META['HTTP_HOST'])+'/miner/update_transaction/'
         response = request_post(url, data=post_data)
