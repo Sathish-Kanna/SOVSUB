@@ -1,6 +1,7 @@
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 import pickle
+from datetime import datetime
 
 import face_recognition
 import cv2
@@ -8,7 +9,11 @@ import cv2
 from .models import Profile
 
 
-def otpmatch(voter_id, otp):
+def otpmatch(voter_id, otp, otp_time):
+    now = datetime.now()
+    timenow = datetime.timestamp(now)
+    if timenow - float(otp_time) > 300:
+        return False
     voter = Profile.objects.get(voter_id=voter_id).__dict__
     return otp == voter.get('otp')
 
@@ -44,9 +49,9 @@ def facematch(voter_id):
             return False
 
 
-def authenticate(voter_id, otp, user_id):
+def authenticate(voter_id, otp, otp_time, user_id):
     try:
-        if facematch(voter_id) and otpmatch(voter_id, otp):
+        if facematch(voter_id) and otpmatch(voter_id, otp, otp_time):
             user = User.objects.get(id=user_id)
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             return user

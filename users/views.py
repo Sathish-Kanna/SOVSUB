@@ -59,6 +59,7 @@ def login_view(request, *args, **kwargs):
         user = authenticate(
             voter_id=data.get("voter_id"),
             otp=data.get("otp"),
+            otp_time=data.get("otp_time"),
             user_id=voter.get('user_id')
         )
         # user.backend = 'django.contrib.auth.backends.ModelBackend'
