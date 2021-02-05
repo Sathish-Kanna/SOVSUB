@@ -17,9 +17,10 @@ def key_generator(voter_id):
 
 def sign(sk_str, data):
     sk = SigningKey.from_pem(sk_str.encode())
-    return sk.sign(SHA256.new(str(data).encode()).digest())
+    sig = sk.sign(SHA256.new(str(data).encode()).digest())
+    return sig.hex()
 
 
 def verify(vk_str, data, signature):
     vk = VerifyingKey.from_pem(vk_str.encode())
-    return vk.verify(signature, SHA256.new(str(data).encode()).digest())
+    return vk.verify(bytes.fromhex(signature), SHA256.new(str(data).encode()).digest())

@@ -1,14 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register page</title>
-</head>
-<body>
-    <form method="post">
-        {% csrf_token %}
-        {{form}}
-        <button class="btn btn-primary media" type="submit">Sign Up</button>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+    <div align="center" style="background-color: #a1f1ac; border-radius: 20px; padding: 10px; margin-bottom: 28px; margin-top: 28px;">
+        <form method="post">
+            {% csrf_token %}
+            {{form.as_p }}
+            <button class="btn btn-primary media" type="submit">Sign Up</button>
+        </form>
+    </div>
+{% endblock content %}

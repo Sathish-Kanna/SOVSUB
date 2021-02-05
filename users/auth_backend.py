@@ -12,14 +12,15 @@ from .models import Profile
 def otpmatch(voter_id, otp, otp_time):
     now = datetime.now()
     timenow = datetime.timestamp(now)
-    if timenow - float(otp_time) > 300:
-        return False
+    # TODO remove the comment statement
+    """if timenow - float(otp_time) > 300: 
+        return False"""
     voter = Profile.objects.get(voter_id=voter_id).__dict__
     return otp == voter.get('otp')
 
 
 def facematch(voter_id):
-    return True
+    return True  # TODO remove this return statement
     # define a video capture object
     video_feed = cv2.VideoCapture(0)
     # Capture the video frame by frame

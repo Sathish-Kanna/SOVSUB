@@ -1,55 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+{% extends "base.html" %}
+{% block content %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+           function yourFunction(intValue){
+             $("#div_r").load( intValue );
+           }
+    </script>
     <style>
-        #videoElement {
-            border: 30px solid #ccc;
-            background: green;
-            width: 400px;
-            height: 400px
+        .split {
+          height: 100%;
+          position: fixed;
+          z-index: 1;
+          overflow-x: hidden;
+          padding-top: 20px;
+        }
+        .left {
+          left: 0;
+          width:20%;
+          background-color: #63ad77;
+          padding: 10px;
+        }
+        .right {
+          right: 0;
+          width:80%;
+          background-color: #87e691;
         }
     </style>
-</head>
-<body>
-    <div class="grid">
-        <form action="." method="POST" class="form login"> {% csrf_token %}
+    <div class="" align="center">
+        <div id="div_l" class="split left">
+            {% if user.is_authenticated %}
+                <button style="margin: 10px; " onclick=yourFunction("/reg/")><span class="glyphicon glyphicon-link"></span> Register Node</button>
+                <br>
+                <button style="margin: 10px; " onclick=yourFunction("/miner/mine/")><span class="glyphicon glyphicon-shopping-cart"></span> Mine Transaction</button>
+            {% endif %}
+        </div>
 
-           <video autoplay id="videoElement"></video>
-
-           <script type="text/javascript">
-                var video = document.querySelector("#videoElement");
-                navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUsermedia
-                    || navigator.mozGetUserMedia || navigato.msGetUserMedia || navigator.oGetUserMedia;
-
-                    if(navigator.getUserMedia){
-                      navigator.getUserMedia({video:true}, handleVideo, videoError)
-                    }
-
-                    function handleVideo(stream){
-                    video.srcObject = stream;
-                    video.play();
-                    }
-
-                    function videoError(e){}
-           </script>
-
-            <div class="input-group media">
-                <span class="glyphicon glyphicon-user" ></span>
-                <input type="text" name="voterid" placeholder="Voter ID" autofocus required id="id_voterid">
+        <div class="split right">
+            <div id="div_r" class="centered">
+                <h2 class="media-heading">{{ head }}</h2>
+                <p class="text-secondary">{{ message|linebreaksbr }}</p>
             </div>
-
-            <div class="input-group media">
-                <span class="glyphicon glyphicon-lock" ></span>
-                <input type="password" name="otp" placeholder="OTP" required id="id_otp">
-            </div>
-
-            <button class="open-button btn btn-primary media" type="submit">Sign In</button>
-        </form>
+        </div>
     </div>
-</body>
-</html>
+{% endblock content %}

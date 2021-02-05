@@ -32,7 +32,7 @@ def set_new_transaction(request, *args, **kwargs):
         if not tx_data.get(field):
             return HttpResponse("Invalid transaction data", 404)
     data = eval(tx_data.get('data'))
-    signature = tx_data.get('signature')[0]
+    signature = tx_data.get('signature')
     pukey = KeyModel.objects.get(temp_id=data.get('tempid')).__dict__.get("pukey")
 
     if verify(pukey, data, signature) and pukey:
@@ -40,7 +40,7 @@ def set_new_transaction(request, *args, **kwargs):
         blockchain.add_new_transaction(str(data))
 
         # remove the KeyModel of that voter so next time the user can't vote
-        keymodel = KeyModel.objects.get('tempid')
+        keymodel = KeyModel.objects.get(temp_id=data.get('tempid'))
         keymodel.delete()
         return HttpResponse("Success", 201)
     else:
@@ -53,17 +53,19 @@ def set_new_transaction(request, *args, **kwargs):
 @csrf_exempt
 def update_transaction(request, *args, **kwargs):
     global peers
-    print(peers)
     if not peers:
-        peers = request_post("http://" + trcr_ip + "/miner/chain/", POST=request.POST)
+        chain = request_post("http://" + trcr_ip + "/miner/chain/", data=request.POST).json()
+        peers = set(chain['peers'])
+
     for peer in peers:
-        request_post("http://" + peer + "/miner/new_transaction/", POST=request.POST)
+        request_post("http://" + peer + "/miner/new_transaction/", data=request.POST)
     return HttpResponse("Unauthorized transaction data", 200)
 
 
 # endpoint to return the node's copy of the chain.
 # Our application will be using this endpoint to query all the posts to display.
 # /chain
+@csrf_exempt
 def get_chain(request, *args, **kwargs):
     chain_data = []
     for block in blockchain.chain:
@@ -182,8 +184,8 @@ def get_pending_tx():
 
 
 def create_chain_from_dump(chain_dump):
-    generated_blockchain = Blockchain()
-    generated_blockchain.create_genesis_block()
+    # generated_blockchain = Blockchain()
+    # generated_blockchain.create_genesis_block()
     for idx, block_data in enumerate(chain_dump):
         if idx == 0:
             continue  # skip genesis block
@@ -219,7 +221,7 @@ def consensus():
             longest_chain = chain
 
     if longest_chain:
-        blockchain = longest_chain
+        blockchain = Blockchain(longest_chain)
         return True
 
     return False
@@ -235,3 +237,30 @@ def announce_new_block(block):
         url = "http://{}/miner/add_block/".format(peer)
         headers = {'Content-Type': "application/json"}
         request_post(url, data=json.dumps(block.__dict__, sort_keys=True), headers=headers)
+
+
+def get_result():
+    global peers
+    global blockchain
+
+    if not peers:
+        chain = request_post("http://" + trcr_ip + "/miner/chain/").json()
+        peers = set(chain['peers'])
+
+    longest_chain = None
+    current_len = len(blockchain.chain)
+    for peer in peers:
+        response = request_get("http://" + peer + "/miner/chain").json()
+        length = response['length']
+        chain = response['chain']
+        if length > current_len and blockchain.check_chain_validity(chain):
+            current_len = length
+            longest_chain = chain
+    if longest_chain:
+        blockchain = Blockchain(longest_chain)
+
+    if not isinstance(blockchain.last_block, Block):
+        block = Block(**blockchain.last_block)
+    else:
+        block = blockchain.last_block
+    return block.cumulated

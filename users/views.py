@@ -38,7 +38,7 @@ def register_view(request):
             voter_id = form.cleaned_data.get('voter_id')
             pk = user.profile.pk
             messages.success(request, 'Account has been created for ' + voter_id + '! You can login')
-            return redirect('intermediate_view')
+            return redirect('home')
     else:
         form = UserRegisterForm()
 
@@ -65,7 +65,7 @@ def login_view(request, *args, **kwargs):
         # user.backend = 'django.contrib.auth.backends.ModelBackend'
         if user:
             login(request, user)
-            return redirect('intermediate_view')
+            return redirect('home')
         messages.error(request, 'Login failed..!')
     else:
         return render(request, 'login_page.html', {'form': LoginForm()})
@@ -118,6 +118,7 @@ def register_to_vote_view(request, *args, **kwargs):
     if request.method == 'GET':
         voter_id = request.user.profile.voter_id
         voter = Profile.objects.get(voter_id=voter_id)
+        context = {"head": 'already registered..!', "message": ''}
         if voter.registered:
             print("registered already")
             messages.error(request, 'already registered..!')
@@ -129,7 +130,8 @@ def register_to_vote_view(request, *args, **kwargs):
             print('You are registered id is: ' + str(t_id) + ' and your private key is: \n'+str(sk_str))
             messages.success(request,
                              'You are registered id is: ' + str(t_id) + ' and your private key is: '+str(sk_str))
-    return redirect('intermediate_view')
+            context = {"head": t_id, "message": sk_str}
+    return render(request, "home_page.html", context)
 
 
 # /logout_view
@@ -137,6 +139,6 @@ def register_to_vote_view(request, *args, **kwargs):
 def logout_view(request):
     logout(request)
     messages.success(request, 'You are logged out')
-    return redirect('user_login')
+    return redirect('home')
 
 

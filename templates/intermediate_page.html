@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Intermediate page</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
     <form action="." method="post">
         {% csrf_token %}
         <input type="submit" name="op" value="vote_cast" />
@@ -12,5 +7,4 @@
         <input type="submit" name="op" value="election_result" />
         <input type="submit" name="op" value="transaction_view" />
     </form>
-</body>
-</html>
+{% endblock content %}

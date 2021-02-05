@@ -1,20 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register node</title>
-</head>
-<body>
 <div class="grid">
-        <form action="." method="POST" class="form votecast"> {% csrf_token %}
+    <form action="{% url 'reg' %}" method="POST" class="form votecast"> {% csrf_token %}
 
-            <div class="input-group media">
-                <span class="glyphicon glyphicon-user" ></span>
-                <input type="text" name="register_with_node" placeholder="Node address" autofocus required id="register_with_node">
-            </div>
+        <div class="input-group media">
+            <span class="glyphicon glyphicon-link" ></span>
+            <input type="text" name="register_with_node" placeholder="Node address" autofocus required id="register_with_node">
+        </div>
 
-            <button class="open-button btn btn-primary media" type="submit">Connect</button>
-        </form>
-    </div>
-</body>
-</html>
+        <button class="open-button btn btn-primary media" type="submit">Connect</button>
+    </form>
+</div>

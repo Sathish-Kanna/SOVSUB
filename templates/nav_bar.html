@@ -1,0 +1,75 @@
+<style>
+    .navbar{
+        position: sticky;
+        top: 0;
+        z-index: 1071;
+        margin-bottom: 2px;
+        background-color: #3f5746;
+    }
+    .dropdown-menu{
+      background-color: #808b96  ;
+      border:1px solid #2f2f1e;
+    }
+    .dropdown-submenu {
+      position: relative;
+    }
+    .dropdown-submenu .dropdown-menu {
+      top: 0;
+      left: 100%;
+      margin-top: -1px;
+    }
+    $(document).ready(function(){
+      $('.dropdown-submenu a.test').on("click", function(e){
+        $(this).next('ul').toggle();
+        e.stopPropagation();
+        e.preventDefault();
+      });
+    });
+</style>
+<nav class="navbar navbar-inverse ">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'home' %}">SOVSUB</a>
+        </div>
+
+        <li class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+                {% if user.is_authenticated %}
+                    {% if not user.is_superuser %}
+                        <li class="dropdown">
+                            <a href="{% url 'vote_cast' %}" class="sub-sub-item" data-parent="#service">
+                                <span class="glyphicon glyphicon-hand-up"></span> Cast Vote </a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="{% url 'register_to_vote_view' %}" class="sub-sub-item" data-parent="#service">
+                                <span class="glyphicon glyphicon-ok-circle"></span> Register to Vote </a>
+                        </li>
+                    {% endif %}
+                    <li class="dropdown">
+                        <a href="{% url 'election_result' %}" class="sub-sub-item" data-parent="#service">
+                            <span class="glyphicon glyphicon-eye-open"></span> View Result </a>
+                   </li>
+                    <li class="dropdown">
+                        <a href="{% url 'election_result' %}" class="sub-sub-item" data-parent="#service">
+                            <span class="glyphicon glyphicon-link"></span> View BC </a>
+                    </li>
+
+                    {% if user.is_superuser %}
+                        <li>
+                            <a href="/admin/"><span class="glyphicon glyphicon-user"></span> Admin Page</a>
+                        </li>
+                    {% endif %}
+                    <li><a href="{% url 'logout_view' %}"><span class="glyphicon glyphicon-log-out"></span> Sign Out</a></li>
+                {% else %}
+                    <li><a href="{% url 'register_view' %}"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+                    <li><a href="{% url 'login_view' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
+                {% endif %}
+            </ul>
+        </li>
+    </div>
+</nav>

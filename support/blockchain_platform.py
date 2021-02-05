@@ -5,13 +5,14 @@ import time
 
 
 class Block:
-    def __init__(self, height, transactions, cumulated, timestamp, previous_hash, nonce=0):
+    def __init__(self, height, transactions, cumulated, timestamp, previous_hash, nonce=0, hash=None):
         self.height = height
         self.transactions = transactions
         self.cumulated = cumulated
         self.timestamp = timestamp
         self.previous_hash = previous_hash
         self.nonce = nonce
+        self.hash = hash
 
     def compute_hash(self):
         """
@@ -25,9 +26,9 @@ class Blockchain:
     # difficulty of our PoW algorithm
     difficulty = 5
 
-    def __init__(self):
+    def __init__(self, chain=[]):
         self.unconfirmed_transactions = []
-        self.chain = []
+        self.chain = chain
 
     def create_genesis_block(self):
         """
@@ -36,7 +37,7 @@ class Blockchain:
         a valid hash.
         """
         genesis_block = Block(height=0, transactions=[], cumulated={"nota": 0}, timestamp=0,
-                              previous_hash=sha256("0".encode()).hexdigest())
+                              previous_hash=sha256("0".encode()).hexdigest(), nonce=117240)
 
         genesis_block.hash = genesis_block.compute_hash()
         self.chain.append(genesis_block)
@@ -95,16 +96,16 @@ class Blockchain:
     @classmethod
     def check_chain_validity(cls, chain):
         result = True
-        previous_hash = "0"
-
+        previous_hash = sha256("0".encode()).hexdigest()
         for block in chain:
+            if not isinstance(block, Block):
+                block = Block(**block)
             block_hash = block.hash
-            # remove the hash field to recompute the hash again
+            # assign None to the hash field to recompute the hash again
             # using `compute_hash` method.
-            delattr(block, "hash")
+            block.hash = None
 
-            if not cls.is_valid_proof(block, block_hash) or \
-                    previous_hash != block.previous_hash:
+            if not cls.is_valid_proof(block, block_hash) or previous_hash != block.previous_hash:
                 result = False
                 break
 

@@ -5,27 +5,11 @@ from django.contrib.auth.decorators import login_required
 from requests import post as request_post
 
 from users.models import Profile
+from miner.views import get_result
 from users.models import Candidate
 from .models import KeyModel
 from support.signature import sign
 from support.signature import verify
-
-
-# endpoint to return intermediate page
-# this page redirects to register, vote, view transaction and results pages based on request
-# /intermediate_view
-@login_required
-def intermediate_view(request, *args, **kwargs):
-    if request.POST:
-        if request.POST.get('op') == 'vote_cast':
-            return redirect('vote_cast')
-        elif request.POST.get('op') == 'register':
-            return redirect('register_to_vote_view')
-        elif request.POST.get('op') == 'election_result':
-            return redirect('election_result')
-        elif request.POST.get('op') == 'transaction_view':
-            return redirect('transaction_view')
-    return render(request, 'intermediate_page.html')
 
 
 # endpoint to cast vote during election
@@ -37,7 +21,7 @@ def vote_cast_view(request, *args, **kwargs):
     voter = Profile.objects.get(voter_id=request.user.profile.voter_id)
     if not voter.registered:
         print("not registered")
-        return redirect('intermediate_view')
+        return redirect('home')
 
     elif request.POST:
         data = {
@@ -69,8 +53,9 @@ def vote_cast_view(request, *args, **kwargs):
 
 # election result view
 def election_result_view(request, *args, **kwargs):
-    cumulated = 'cumulated'  # last_block()
-    return render(request, "result_page.html", {'cumulated': cumulated})
+    cumulated = get_result()
+    return render(request, "home_page.html", {'head': 'Result', 'message': cumulated})
+    # return render(request, "result_page.html", {'cumulated': cumulated})
 
 
 # election result view
@@ -100,5 +85,5 @@ def reg(request, *args, **kwargs):
         content = response.content
         if response.status_code == 200:
             print("pears updated")
-        return HttpResponse(content)
+        return render(request, "home_page.html", {'head': content.decode()})
     return render(request, "register.html", {})
