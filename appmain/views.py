@@ -6,6 +6,8 @@ from requests import post as request_post
 
 from users.models import Profile
 from miner.views import get_result
+from miner.views import get_all_transactions
+from miner.views import register_with_existing_node
 from users.models import Candidate
 from .models import KeyModel
 from support.signature import sign
@@ -60,8 +62,9 @@ def election_result_view(request, *args, **kwargs):
 
 # election result view
 def transaction_view(request, *args, **kwargs):
-    transactions = 'trans'  # all_transaction_in_block()
-    return render(request, "transaction_page.html", {'transactions': transactions})
+    transactions = get_all_transactions()
+    return render(request, "home_page.html", {'head': 'Transactions', 'message': transactions})
+    # return render(request, "transaction_page.html", {'transactions': transactions})
 
 
 # home view
@@ -78,12 +81,12 @@ def home_view(request, *args, **kwargs):
 def reg(request, *args, **kwargs):
     if request.POST:
         post_data = {
-            "register_with_node": request.POST.get('register_with_node'),
-            "node_address": request.META['HTTP_HOST'],
+            "register_with_node_address": request.POST.get('register_with_node'),
+            "current_node_address": request.META['HTTP_HOST'],
         }
-        response = request_post("http://"+request.META['HTTP_HOST'] + '/miner/register_with/', data=post_data)
-        content = response.content
-        if response.status_code == 200:
+        response = register_with_existing_node(post_data)
+        content = response.get('content')
+        if response.get('status_code') == 200:
             print("pears updated")
-        return render(request, "home_page.html", {'head': content.decode()})
+        return render(request, "home_page.html", {'head': content})
     return render(request, "register.html", {})
