@@ -107,46 +107,9 @@ def register_new_peers(request, *args, **kwargs):
     # Add the node to the peer list
     peers.add(node_address)
 
-    # Return the consensus blockchain to the newly registered node
+    # Return the peers list to the newly registered node
     # so that he can sync
-    return HttpResponse(get_chain(request))
-
-
-# /register_with
-@csrf_exempt
-def register_with_existing_node(request, *args, **kwargs):
-    """
-    Internally calls the `register_node` endpoint to
-    register current node with the node specified in the
-    request, and sync the blockchain as well as peer data.
-    """
-    node_address = request.POST["node_address"]
-    if not node_address:
-        return HttpResponse("Invalid data", 400)
-
-    data = {"node_address": node_address}
-    reg_w = request.POST.get("register_with_node")
-    headers = {'Content-Type': "application/json"}
-
-    # Make a request to register with remote node and obtain information
-    url = "http://" + reg_w + "/miner/register_node/"
-    response = request_post(url, data=json.dumps(data), headers=headers)
-    # response = register_new_peers(request)
-
-    if response.status_code == 200:
-        global blockchain
-        global peers
-        # update chain and the peers
-        chain_dump = json.loads(response.content)['chain']
-        blockchain = create_chain_from_dump(chain_dump)
-        peers.update(json.loads(response.content)['peers'])
-        for peer in peers:
-            url = "http://" + peer + "/miner/register_node/"
-            response = request_post(url, data=json.dumps(data), headers=headers)
-        return HttpResponse("Registration successful", 200)
-    else:
-        # if something goes wrong, pass it on to the API response
-        return HttpResponse(response.content, response.status_code)
+    return HttpResponse(json.dumps({"peers": list(peers)}))
 
 
 # endpoint to add a block mined by someone else to the node's chain.
@@ -183,11 +146,69 @@ def get_pending_tx():
     return json.dumps(blockchain.unconfirmed_transactions)
 
 
+def register_with_existing_node(request):
+    """
+    Internally calls the `register_node` endpoint to
+    register current node with the node specified in the
+    request, and sync the blockchain as well as peer data.
+    """
+    cn_adr = request.get("current_node_address")
+    rwn_adr = request.get("register_with_node_address")
+
+    data = {"node_address": cn_adr}
+    headers = {'Content-Type': "application/json"}
+
+    # Make a request to register with remote node and obtain information
+    url = "http://" + rwn_adr + "/miner/register_node/"
+    response = request_post(url, data=json.dumps(data), headers=headers)
+
+    rtn_response = {'status_code': response.status_code, 'content': "Registration successful"}
+
+    if response.status_code == 200:
+        global peers
+        # update peers
+        peers.add(rwn_adr)
+
+        new_peers = set(json.loads(response.content)['peers']) - peers
+        while new_peers:
+            peer = new_peers.pop()
+            url = "http://" + peer + "/miner/register_node/"
+            response = request_post(url, data=json.dumps(data), headers=headers)
+            if response.status_code == 200:
+                peers.add(peer)
+                new_peers.update(set(json.loads(response.content)['peers']) - peers)
+            else:
+                rtn_response = {'node': peer, 'status_code': response.status_code, 'content': "Unsuccessful Registration"}
+    else:
+        # if something goes wrong, pass it on to the API response
+        rtn_response = {'node': rwn_adr, 'status_code': response.status_code, 'content': "Unsuccessful Registration"}
+    # update chain
+    get_longest_chain()
+    return rtn_response
+
+
+def get_longest_chain():
+    global blockchain
+    response_chain = request_post("http://" + trcr_ip + "/miner/chain/").json()
+    local_peers = set(response_chain['peers'])
+
+    longest_chain = None
+    current_len = len(blockchain.chain)
+    for peer in local_peers:
+        response = request_get("http://" + peer + "/miner/chain").json()
+        response_len = response['length']
+        response_chain = response['chain']
+        if response_len > current_len and blockchain.check_chain_validity(response_chain):
+            current_len = response_len
+            longest_chain = response_chain
+    if longest_chain:
+        blockchain = Blockchain(longest_chain)
+    return blockchain
+
+
 def create_chain_from_dump(chain_dump):
-    # generated_blockchain = Blockchain()
-    # generated_blockchain.create_genesis_block()
     for idx, block_data in enumerate(chain_dump):
-        if idx == 0:
+        if idx <= blockchain.last_block.height:
             continue  # skip genesis block
         block = Block(block_data["height"],
                       block_data["transactions"],
@@ -208,19 +229,10 @@ def consensus():
     found, our chain is replaced with it.
     """
     global blockchain
+    current_chain = blockchain.chain
+    longest_chain = get_longest_chain()
 
-    longest_chain = None
-    current_len = len(blockchain.chain)
-
-    for peer in peers:
-        response = request_get("http://" + peer + "/miner/chain")
-        length = response.json()['length']
-        chain = response.json()['chain']
-        if length > current_len and blockchain.check_chain_validity(chain):
-            current_len = length
-            longest_chain = chain
-
-    if longest_chain:
+    if len(longest_chain.chain) > len(current_chain):
         blockchain = Blockchain(longest_chain)
         return True
 
@@ -240,27 +252,11 @@ def announce_new_block(block):
 
 
 def get_result():
-    global peers
-    global blockchain
+    return get_longest_chain().last_block.cumulated
 
-    if not peers:
-        chain = request_post("http://" + trcr_ip + "/miner/chain/").json()
-        peers = set(chain['peers'])
 
-    longest_chain = None
-    current_len = len(blockchain.chain)
-    for peer in peers:
-        response = request_get("http://" + peer + "/miner/chain").json()
-        length = response['length']
-        chain = response['chain']
-        if length > current_len and blockchain.check_chain_validity(chain):
-            current_len = length
-            longest_chain = chain
-    if longest_chain:
-        blockchain = Blockchain(longest_chain)
-
-    if not isinstance(blockchain.last_block, Block):
-        block = Block(**blockchain.last_block)
-    else:
-        block = blockchain.last_block
-    return block.cumulated
+def get_all_transactions():
+    transactions = []
+    for block in get_longest_chain().chain:
+        transactions.append(block.transactions)
+    return transactions
