@@ -29,6 +29,14 @@ class Blockchain:
     def __init__(self, chain=[]):
         self.unconfirmed_transactions = []
         self.chain = chain
+        chain_ = []
+        if len(chain) > 0:
+            for block in chain:
+                if not isinstance(block, Block):
+                    chain_.append(Block(**block))
+                else:
+                    chain_.append(block)
+            self.chain = chain_
 
     def create_genesis_block(self):
         """
