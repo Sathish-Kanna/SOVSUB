@@ -26,7 +26,9 @@ class Blockchain:
     # difficulty of our PoW algorithm
     difficulty = 5
 
-    def __init__(self, chain=[]):
+    def __init__(self, chain=None):
+        if chain is None:
+            chain = []
         self.unconfirmed_transactions = []
         self.chain = chain
         chain_ = []
