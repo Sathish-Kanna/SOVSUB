@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.shortcuts import redirect
-from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from requests import post as request_post
 
@@ -23,7 +22,8 @@ def vote_cast_view(request, *args, **kwargs):
     voter = Profile.objects.get(voter_id=request.user.profile.voter_id)
     if not voter.registered:
         print("not registered")
-        return redirect('home')
+        context = {"head": 'Can\'t cast vote ..!', "message": ''}
+        return render(request, "home_page.html", context)
 
     elif request.POST:
         data = {
@@ -41,7 +41,13 @@ def vote_cast_view(request, *args, **kwargs):
             else:
                 t += x + "-----"
         signature = sign(sk_str=t, data=data)
-        vk_str = KeyModel.objects.get(temp_id=request.POST.get('tempid')).__dict__.get("pukey")
+        try:
+            vk_str = KeyModel.objects.get(temp_id=request.POST.get('tempid')).__dict__.get("pukey")
+        except KeyModel.DoesNotExist:
+            print("already voted")
+            context = {"head": 'Can\'t cast vote ..!', "message": ''}
+            return render(request, "home_page.html", context)
+
         post_data = {
             "data": str(data),
             "signature": signature,
@@ -49,6 +55,8 @@ def vote_cast_view(request, *args, **kwargs):
         url = 'http://'+str(request.META['HTTP_HOST'])+'/miner/update_transaction/'
         response = request_post(url, data=post_data)
         content = response.content
+        context = {"head": 'Casted vote successfully ..!', "message": ''}
+        return render(request, "home_page.html", context)
 
     return render(request, "votecast_page.html", {'candidates': candidates})
 
@@ -60,7 +68,7 @@ def election_result_view(request, *args, **kwargs):
     # return render(request, "result_page.html", {'cumulated': cumulated})
 
 
-# election result view
+# transaction view
 def transaction_view(request, *args, **kwargs):
     transactions = get_all_transactions()
     return render(request, "home_page.html", {'head': 'Transactions', 'message': transactions})
