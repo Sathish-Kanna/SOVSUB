@@ -67,8 +67,7 @@ def login_view(request, *args, **kwargs):
             login(request, user)
             return redirect('home')
         messages.error(request, 'Login failed..!')
-    else:
-        return render(request, 'login_page.html', {'form': LoginForm()})
+    return render(request, 'login_page.html', {'form': LoginForm()})
 
 
 # endpoint to generate otp
