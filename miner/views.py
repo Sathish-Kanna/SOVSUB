@@ -81,6 +81,10 @@ def get_chain(request, *args, **kwargs):
 # We'll be using it to initiate a command to mine from our application itself.
 # /mine
 def mine_unconfirmed_transactions(request, *args, **kwargs):
+    url = "http://" + trcr_ip + "/miner/chain/"
+    response = request_post(url, data=json.dumps(''), headers='')
+    if request.META['HTTP_HOST'] not in json.loads(response.content)['peers']:
+        return HttpResponse("Not registered to mine")
     result = blockchain.mine()
     if not result:
         return HttpResponse("No transactions to mine")
