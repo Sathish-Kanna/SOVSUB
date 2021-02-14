@@ -4,10 +4,18 @@ from ecdsa import NIST384p
 from ecdsa import SigningKey
 from ecdsa import VerifyingKey
 from Crypto.Hash import SHA256
+from appmain.models import KeyModel
 
 
 def key_generator(voter_id):
-    t_id = str(voter_id)+str(random.randint(1000, 9999))
+    t_id = None
+    while t_id is None:
+        t_id = str(voter_id) + str(random.randint(1000, 9999))
+        try:
+            KeyModel.objects.get(temp_id=t_id)
+            t_id = None
+        except KeyModel.DoesNotExist:
+            pass
     sk = SigningKey.generate(curve=NIST384p)
     vk = sk.verifying_key
     sk_str = sk.to_pem().decode()

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="grid">
+    <!--<div class="grid">
         <form action="." method="POST" class="form votecast"> {% csrf_token %}
 
             <input type="text" name="tempid" placeholder="Temp ID" autofocus required id="id_tempid">
@@ -21,5 +21,115 @@
 
             <button class="open-button btn btn-primary media" type="submit">Vote</button>
         </form>
+    </div>-->
+<style>
+    .loader {
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite; /* Safari */
+      animation: spin 2s linear infinite;
+    }
+
+    /* Safari */
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    </style>
+    <style>
+        .split {
+          height: 100%;
+          position: fixed;
+          z-index: 1;
+          overflow-x: hidden;
+          padding-top: 20px;
+        }
+        .left {
+          left: 0;
+          width:70%;
+          background-color: #5b8db1;
+          padding: 10px;
+        }
+        .right {
+          right: 0;
+          width:30%;
+          background-color: #a0c7e4;
+        }
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+        }
+
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: center;
+          padding: 8px;
+        }
+
+    </style>
+    <script>
+        function assignVoted(voted)
+        {
+            document.getElementById('id_voted').value=voted;
+        }
+    </script>
+    <div class="" align="center">
+        <div id="div_l" class="split left">
+            <table>
+                <tr>
+                    <th>Serial no.</th>
+                    <th>Candidate Name</th>
+                    <!--th>Candidate Photo</th>
+                    <th>Electoral Symbol</th-->
+                    <th>Your Vote</th>
+                </tr>
+                {% if candidates %}
+                    {% for candidate in candidates %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <div class="radiotext">
+                                <label for='{{candidate.candidate_id}}'>{{candidate.name}}</label>
+                            </div>
+                        </td>
+                        <!--td><img src="{{candidate.photo}}" alt="{{candidate.name}}" class="img-circle" style="width:80px; height:80px"></td>
+                        <td><img src="{{candidate.symbol}}" alt="{{candidate.party}}" class="img-circle" style="width:80px; height:80px"></td-->
+                        <td>
+                            <div class="radio">
+                                <label><input onclick=assignVoted("{{candidate.candidate_id}}") type="radio" id='{{candidate.candidate_id}}' name="optradio"></label>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </table>
+        </div>
+
+        <div class="split right">
+            <div id="div_r" class="centered">
+                <form action="." method="POST" class="form votecast"> {% csrf_token %}
+
+                    <input type="text" name="tempid" placeholder="Temp ID" autofocus required id="id_tempid">
+                    <input id="id_voted" type="text" name="voted" placeholder="Candidate" hidden>
+                    <input type="text" name="sk_hex" placeholder="Private key" autofocus required id="id_sk_hex">
+                    <input type="hidden" name="timestamp" placeholder="Time stamp" id="id_timestamp">
+                    <script>
+                        var d = new Date();
+                        document.getElementById("id_timestamp").value  = + d;
+                    </script>
+
+                    <button class="open-button btn btn-primary media" type="submit">Vote</button>
+                </form>
+            </div>
+        </div>
     </div>
 {% endblock content %}

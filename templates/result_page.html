@@ -1,4 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-    {{cumulated}}
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+        }
+
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: center;
+          padding: 8px;
+        }
+
+    </style>
+    <table>
+        <tr>
+            <th>Serial no.</th>
+            <th>Candidate Name</th>
+            <!--th>Candidate Photo</th>
+            <th>Electoral Symbol</th-->
+            <th>Votes</th>
+        </tr>
+        {% if candidates %}
+            {% for candidate in candidates %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{candidate.name}}</td>
+                <!--td><img src="{{candidate.photo}}" alt="{{candidate.name}}" class="img-circle" style="width:80px; height:80px"></td>
+                <td><img src="{{candidate.symbol}}" alt="{{candidate.party}}" class="img-circle" style="width:80px; height:80px"></td-->
+                <td>{{candidate.vote}}</td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+    </table>
 {% endblock content %}

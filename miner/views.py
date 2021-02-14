@@ -39,9 +39,9 @@ def set_new_transaction(request, *args, **kwargs):
         data["signature"] = signature
         blockchain.add_new_transaction(str(data))
 
-        # remove the KeyModel of that voter so next time the user can't vote
+        # update the KeyModel of that voter so next time the user can't vote
         keymodel = KeyModel.objects.get(temp_id=data.get('tempid'))
-        keymodel.delete()
+        keymodel.voted = True
         return HttpResponse("Success", 201)
     else:
         return HttpResponse("Unauthorized transaction data", 401)
@@ -262,5 +262,8 @@ def get_result():
 def get_all_transactions():
     transactions = []
     for block in get_longest_chain().chain:
-        transactions.append(block.transactions)
+        for transaction in block.transactions:
+            tmp = eval(transaction)
+            tmp['block_Id'] = block.height
+            transactions.append(tmp)
     return transactions

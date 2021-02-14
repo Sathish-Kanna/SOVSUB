@@ -20,6 +20,10 @@ from support.signature import verify
 def vote_cast_view(request, *args, **kwargs):
     candidates = Candidate.objects.all()
     voter = Profile.objects.get(voter_id=request.user.profile.voter_id)
+    candidate_list = []
+    for candidate in candidates:
+        if candidate.booth_id == voter.booth_id or candidate.booth_id == '*':
+            candidate_list.append(candidate)
     if not voter.registered:
         print("not registered")
         context = {"head": 'Can\'t cast vote ..!', "message": ''}
@@ -31,6 +35,10 @@ def vote_cast_view(request, *args, **kwargs):
             "voted": request.POST.get('voted'),
             "timestamp": request.POST.get('timestamp'),
         }
+        if KeyModel.objects.get(temp_id=request.POST.get('tempid')).__dict__.get("voted"):
+            print("already voted")
+            context = {"head": 'Can\'t cast vote ..!', "message": ''}
+            return render(request, "home_page.html", context)
         sk_str = request.POST.get('sk_hex')
         t = ''
         i = 0
@@ -44,7 +52,7 @@ def vote_cast_view(request, *args, **kwargs):
         try:
             vk_str = KeyModel.objects.get(temp_id=request.POST.get('tempid')).__dict__.get("pukey")
         except KeyModel.DoesNotExist:
-            print("already voted")
+            print("error does not exist")
             context = {"head": 'Can\'t cast vote ..!', "message": ''}
             return render(request, "home_page.html", context)
 
@@ -58,21 +66,26 @@ def vote_cast_view(request, *args, **kwargs):
         context = {"head": 'Casted vote successfully ..!', "message": ''}
         return render(request, "home_page.html", context)
 
-    return render(request, "votecast_page.html", {'candidates': candidates})
+    return render(request, "votecast_page.html", {'candidates': candidate_list})
 
 
 # election result view
 def election_result_view(request, *args, **kwargs):
+    result = []
     cumulated = get_result()
-    return render(request, "home_page.html", {'head': 'Result', 'message': cumulated})
-    # return render(request, "result_page.html", {'cumulated': cumulated})
+    for c_id, val in cumulated.items():
+        candidate = Candidate.objects.get(candidate_id=c_id).__dict__
+        candidate['vote'] = val
+        result.append(candidate)
+    # return render(request, "home_page.html", {'head': 'Result', 'message': cumulated})
+    return render(request, "result_page.html", {'candidates': sorted(result, key=lambda i: (i['booth_id'], i['vote']), reverse=True)})
 
 
 # transaction view
 def transaction_view(request, *args, **kwargs):
     transactions = get_all_transactions()
-    return render(request, "home_page.html", {'head': 'Transactions', 'message': transactions})
-    # return render(request, "transaction_page.html", {'transactions': transactions})
+    # return render(request, "home_page.html", {'head': 'Transactions', 'message': transactions})
+    return render(request, "transaction_page.html", {'transactions': transactions})
 
 
 # home view

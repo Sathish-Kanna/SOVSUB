@@ -10,20 +10,22 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class Candidate(models.Model):
-    candidate_id = models.CharField(max_length=10)
+    candidate_id = models.CharField(unique=True, max_length=10)
     name = models.CharField(max_length=100)
     booth_id = models.CharField(max_length=10)
+    party = models.CharField(max_length=100)
     otp = models.CharField(max_length=6, blank=True)
     otp_time = models.CharField(max_length=20, blank=True)
     phone_regex = RegexValidator(regex=r'^\+?\d{10,12}$',
                                  message='Phone number must be entered in the format: "+919876543210"')
     phone_number = models.CharField(validators=[phone_regex], max_length=17)
-    image = models.ImageField(upload_to='candidate_img', blank=True)
+    photo = models.ImageField(upload_to='candidate_img', blank=True)
+    symbol = models.ImageField(upload_to='candidate_sym', blank=True)
 
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    voter_id = models.CharField(max_length=10)
+    voter_id = models.CharField(unique=True, max_length=10)
     name = models.CharField(max_length=100)
     booth_id = models.CharField(max_length=10)
     registered = models.BooleanField(default=False)

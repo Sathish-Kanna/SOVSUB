@@ -46,7 +46,7 @@ class Blockchain:
         the chain. The block has height 0, previous_hash as 0, and
         a valid hash.
         """
-        genesis_block = Block(height=0, transactions=[], cumulated={"nota": 0}, timestamp=0,
+        genesis_block = Block(height=0, transactions=[], cumulated={"0": 0}, timestamp=0,
                               previous_hash=sha256("0".encode()).hexdigest(), nonce=117240)
 
         genesis_block.hash = genesis_block.compute_hash()

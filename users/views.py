@@ -50,18 +50,12 @@ def register_view(request):
 # This will be used by our application to authenticate the voters
 # /login
 def login_view(request, *args, **kwargs):
-    if request.POST.get('generate_otp'):
-        generate_otp_view(request.POST.get('voter_id'))
-    if request.POST.get('login'):
+    print(request.POST)
+    if request.POST.get('voter_id'):
         data = request.POST
         # validate voter
         voter = Profile.objects.get(voter_id=data.get("voter_id")).__dict__
-        user = authenticate(
-            voter_id=data.get("voter_id"),
-            otp=data.get("otp"),
-            otp_time=data.get("otp_time"),
-            user_id=voter.get('user_id')
-        )
+        user = authenticate(voter_id=data.get("voter_id"), otp=data.get("otp"), user_id=voter.get('user_id'))
         # user.backend = 'django.contrib.auth.backends.ModelBackend'
         if user:
             login(request, user)
@@ -73,40 +67,44 @@ def login_view(request, *args, **kwargs):
 # endpoint to generate otp
 # we use this to generate otp from login page
 # /generate_otp
-def generate_otp_view(voter_id):
-    # env.json is the file with twilio and other credentials
-    with open("env.json") as json_file:
-        env = json.load(json_file)
-    twilio_env = env.get('TWILIO')
-    account_sid = twilio_env.get('ACCOUNT_SID')
-    auth_token = twilio_env.get('AUTH_TOKEN')
-    client = Client(account_sid, auth_token)
+def generate_otp_view(request, *args, **kwargs):
+    if request.POST.get('voter_id'):
+        voter_id = request.POST.get('voter_id')
+        # env.json is the file with twilio and other credentials
+        with open("env.json") as json_file:
+            env = json.load(json_file)
+        twilio_env = env.get('TWILIO')
+        account_sid = twilio_env.get('ACCOUNT_SID')
+        auth_token = twilio_env.get('AUTH_TOKEN')
+        client = Client(account_sid, auth_token)
 
-    # fetch the voter data from database
-    voter = Profile.objects.get(voter_id=voter_id)
+        # fetch the voter data from database
+        voter = Profile.objects.get(voter_id=voter_id)
 
-    # generate otp for verification
-    msg_bdy = "Your OTP is: "
-    otp = ''
-    for i in range(6):
-        otp += str(random.randint(1, 9))
+        # generate otp for verification
+        msg_bdy = "Your OTP is: "
+        otp = ''
+        for i in range(6):
+            otp += str(random.randint(1, 9))
 
-    # save otp in password field
-    # voter.set_password(otp)
-    voter.otp = otp
-    now = datetime.now()
-    timestamp = datetime.timestamp(now)
-    # voter.set_otp_time(timestamp)
-    voter.otp_time = timestamp
-    voter.save()
+        # save otp in password field
+        # voter.set_password(otp)
+        voter.otp = otp
+        now = datetime.now()
+        timestamp = datetime.timestamp(now)
+        # voter.set_otp_time(timestamp)
+        voter.otp_time = timestamp
+        voter.save()
 
-    # create and send otp message to voter
-    message = client.messages.create(
-        body=msg_bdy+otp,                   # message data
-        from_=twilio_env.get('NUMBER'),     # your number
-        to=str(voter.phone_number)          # voter mobile number
-    )
-    print(message.sid)
+        # create and send otp message to voter
+        message = client.messages.create(
+            body=msg_bdy+otp,                   # message data
+            from_=twilio_env.get('NUMBER'),     # your number
+            to=str(voter.phone_number)          # voter mobile number
+        )
+        print(message.sid)
+    return HttpResponse('otp sent')
+    # return render(request, 'login_page.html', {'form': LoginForm()})
 
 
 # endpoint to register for voting
@@ -123,7 +121,7 @@ def register_to_vote_view(request, *args, **kwargs):
             messages.error(request, 'already registered..!')
         else:
             t_id, sk_str, vk_str = key_generator(voter_id)
-            km = KeyModel.objects.create(voter_id=voter_id, temp_id=t_id, pukey=vk_str)
+            km = KeyModel.objects.create(temp_id=t_id, pukey=vk_str)
             voter.registered = True
             voter.save()
             print('You are registered id is: ' + str(t_id) + ' and your private key is: \n'+str(sk_str))

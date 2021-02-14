@@ -20,6 +20,7 @@ def extract_face_embedding():
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)[0]
 
         data = {voter_id: face_encodings}
-        with open("./face_encodings/encodings.pickle", "wb") as f:
+        with open("/home/sathishkanna/PycharmProjects/SOVSUB/face_encodings/encodings.pickle", "wb") as f:
             pickle.dump(data, f)
     cv2.imshow("Frame", img)
+extract_face_embedding()

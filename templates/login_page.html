@@ -1,20 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
-    <div align="center" style="background-color: #a1f1ac; border-radius: 20px; padding: 10px; margin-bottom: 28px; margin-top: 28px;">
-        <form id="generateOtp" action="." method="post">{% csrf_token %}</form>
-        <form id="login" action="." method="post" enctype="multipart/form-data">
-            {% csrf_token %}{{form}}
-            <input type="submit" name="login" value="Login" form="login" />
-        </form>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function generateOTP(){
+            $('#id_otp').remove();
+            var v_id = $('#id_voter_id').val();
+            var csrf = '{{ csrf_token }}';
+            var params = { 'csrfmiddlewaretoken' : csrf , 'voter_id' : v_id };
 
-        <div id="toolbar">
+            $.ajax({
+                type: 'POST',
+                url : '/user/generate_otp/',
+                data: params,
+                success: function(data) {},
+                error: function() {}
+            })
+            $('#otp_div').append('<input type="text" name="otp" maxlength="6" minlength="6" required="" id="id_otp">');
+        }
+
+        function loginForm(){
+            var v_id = $('#id_voter_id').val();
+            var otp = $('#id_otp').val();
+            var csrf = '{{ csrf_token }}';
+            var params = { 'csrfmiddlewaretoken' : csrf , 'otp' : otp, 'voter_id' : v_id };
+
+            const video = document.querySelector('video');
+            const mediaStream = video.srcObject;
+            const tracks = mediaStream.getTracks();
+            tracks.forEach(track => track.stop())
+
+            setTimeout(function(){post('.', params)}, 1000);
+        }
+
+        function post(path, params, method='post') {
+            const form = document.createElement('form');
+            form.method = method;
+            form.action = path;
+
+            for (const key in params) {
+                if (params.hasOwnProperty(key)) {
+                  const hiddenField = document.createElement('input');
+                  hiddenField.type = 'hidden';
+                  hiddenField.name = key;
+                  hiddenField.value = params[key];
+
+                  form.appendChild(hiddenField);
+                }
+            }
+            document.body.appendChild(form);
+            form.submit(function(){
+              $.post($(this).attr('action'), $(this).serialize(), function(response){
+                    // do something here on success
+              },'json');
+              return false;
+            });
+        }
+    </script>
+    <div class="center-contain" align="center" style="background-color: #a0c7e4; border-radius: 20px; padding: 10px; margin-bottom: 28px; margin-top: 28px;">
             {% csrf_token %}
-            <input type="text" name="voter_id" id="voter_id_" form="generateOtp" placeholder="Voter ID" />
-            <!input type="text" name="otp" id="otp" form="login" placeholder="OTP" />
-            <input type="submit" name="generate_otp" value="Generate OTP" form="generateOtp" />
-            <!input type="text" name="voter_id" id="voter_id_" form="login" placeholder="Voter ID" />
-            <!input type="file" name="image" accept="image/*" id="id_image" form="login">
-            <video autoplay id="videoElement" width="500px" height="375px" style="border:5px solid red;"></video>
+            <label for="id_voter_id">Voter ID:</label>
+            <input type="text" name="voter_id" maxlength="10" required="" id="id_voter_id">
+            <br>
+            <div id="otp_div">
+                <label for="id_otp">OTP:</label>
+                <!input type="text" name="otp" maxlength="6" minlength="6" required="" id="id_otp">
+                <button id="id_otp" onclick=generateOTP()>Generate OTP</button>
+            </div>
+            <br>
+            <video autoplay id="videoElement" width="500px" height="375px" style="border:5px solid #1e472c;"></video>
             <script>
                 var video = document.querySelector("#videoElement");
 
@@ -28,9 +81,19 @@
                     });
                 }
                 video.srcObject = null;
-            </script>
+                function stop(e) {
+                  var stream = video.srcObject;
+                  var tracks = stream.getTracks();
 
-            <!input type="submit" name="login" value="Login" form="login" />
-        </div>
+                  for (var i = 0; i < tracks.length; i++) {
+                    var track = tracks[i];
+                    track.stop();
+                  }
+
+                  video.srcObject = null;
+                }
+            </script>
+            <br>
+            <button onclick=loginForm()>Login</button>
     </div>
 {% endblock content %}

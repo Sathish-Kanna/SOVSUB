@@ -21,6 +21,10 @@ from appmain import urls as appmain_urls
 from users import urls as users_urls
 from miner import urls as miner_urls
 
+admin.site.site_header = "SOVSUB Admin"
+admin.site.site_title = "SOVSUB Admin Portal"
+admin.site.index_title = "Welcome to SOVSUB Admin Portal"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(appmain_urls)),

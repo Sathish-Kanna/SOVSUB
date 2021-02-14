@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-    <div align="center" style="background-color: #a1f1ac; border-radius: 20px; padding: 10px; margin-bottom: 28px; margin-top: 28px;">
+<div class="center-contain" align="center"
+     style="background-color: #a0c7e4; border-radius: 20px; padding: 10px; margin-bottom: 28px; margin-top: 28px;"
+     xmlns="http://www.w3.org/1999/html">
         <form method="post">
             {% csrf_token %}
-            {{form.as_p }}
+            <table>
+            <tr><th><label for="id_username">E-mail:</label></th><td><input type="email" name="username" maxlength="100" autofocus required id="id_username"></td></tr>
+            <tr><th><label for="id_voter_id">Voter id:</label></th><td><input type="text" name="voter_id" maxlength="10" required id="id_voter_id"></td></tr>
+            <tr><th><label for="id_name">Name:</label></th><td><input type="text" name="name" maxlength="100" required id="id_name"></td></tr>
+            <tr><th><label for="id_booth_id">Booth id:</label></th><td><input type="text" name="booth_id" maxlength="10" required id="id_booth_id"></td></tr>
+            <tr><th><label for="id_phone_number">Phone number:</label></th><td><input type="text" name="phone_number" maxlength="17" required id="id_phone_number"></td></tr>
+            <tr hidden><th><label for="id_password1">Password:</label></th><td><input type="password" value="hashWord@1" name="password1" autocomplete="new-password" required id="id_password1"><br></td></tr>
+            <tr hidden><th><label for="id_password2">Password confirmation:</label></th><td><input type="password" value="hashWord@1" name="password2" autocomplete="new-password" required id="id_password2"><br></td></tr>
+            </table>
             <button class="btn btn-primary media" type="submit">Sign Up</button>
         </form>
     </div>
