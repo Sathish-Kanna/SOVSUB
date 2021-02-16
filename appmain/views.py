@@ -37,7 +37,8 @@ def vote_cast_view(request, *args, **kwargs):
             "voted": request.POST.get('voted'),
             "timestamp": request.POST.get('timestamp'),
         }
-        if KeyModel.objects.get(temp_id=request.POST.get('tempid')).__dict__.get("voted"):
+        key_model = KeyModel.objects.get(temp_id=request.POST.get('tempid'))
+        if key_model.__dict__.get("voted"):
             print("already voted")
             context = {"head": 'Can\'t cast vote ..!', "message": ''}
             return render(request, "home_page.html", context)
@@ -52,7 +53,7 @@ def vote_cast_view(request, *args, **kwargs):
                 t += x + "-----"
         signature = sign(sk_str=t, data=data)
         try:
-            vk_str = KeyModel.objects.get(temp_id=request.POST.get('tempid')).__dict__.get("pukey")
+            vk_str = key_model.__dict__.get("pukey")
         except KeyModel.DoesNotExist:
             print("error does not exist")
             context = {"head": 'Can\'t cast vote ..!', "message": ''}
