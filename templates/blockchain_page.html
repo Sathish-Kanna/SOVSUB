@@ -1,0 +1,34 @@
+{% block content %}
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+        }
+
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: center;
+          padding: 8px;
+        }
+
+    </style>
+    <table>
+        <tr>
+            <th>Block Id</th>
+            <th>No. of transactions </th>
+            <th>Time Stamp</th>
+            <th>Block Hash</th>
+        </tr>
+        {% if blockchain %}
+            {% for block in blockchain %}
+            <tr>
+                <td>{{block.height}}</td>
+                <td>{{block.trans_len}}</td>
+                <td>{{block.timestamp}}</td>
+                <td>{{block.hash|truncatechars:50}}</td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+    </table>
+{% endblock content %}

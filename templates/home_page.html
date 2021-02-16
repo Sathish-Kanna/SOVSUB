@@ -2,10 +2,10 @@
 {% block content %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
-           function yourFunction(intValue){
+           function loadOnButtonPress(link){
              $('#div_r').empty();
              $('#div_r').append('<div class="loader"></div>');
-             $("#div_r").load( intValue );
+             $("#div_r").load( link );
            }
     </script>
     <style>
@@ -53,9 +53,13 @@
     <div class="" align="center">
         <div id="div_l" class="split left">
             {% if user.is_authenticated %}
-                <button style="margin: 10px; " onclick=yourFunction("/reg/")><span class="glyphicon glyphicon-link"></span> Register Node</button>
+                <button style="margin: 10px; " onclick=loadOnButtonPress("/reg/")><span class="glyphicon glyphicon-link"></span> Register Node</button>
                 <br>
-                <button style="margin: 10px; " onclick=yourFunction("/miner/mine/")><span class="glyphicon glyphicon-shopping-cart"></span> Mine Transaction</button>
+                <button style="margin: 10px; " onclick=loadOnButtonPress("/miner/mine/")><span class="glyphicon glyphicon-shopping-cart"></span> Mine Transaction</button>
+                <br>
+                <button style="margin: 10px; " onclick=loadOnButtonPress("/pending_transaction_view/")><span class="glyphicon glyphicon-shopping-cart"></span> Pending Transaction</button>
+            <br>
+                <button style="margin: 10px; " onclick=loadOnButtonPress("/blockchain_view/")><span class="glyphicon glyphicon-shopping-cart"></span> Blockchain</button>
             {% endif %}
         </div>
 
