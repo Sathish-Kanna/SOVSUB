@@ -144,12 +144,6 @@ def verify_and_add_block(request, *args, **kwargs):
     return HttpResponse("Block added to the chain", 201)
 
 
-# endpoint to query unconfirmed transactions
-# /pending_tx
-def get_pending_tx():
-    return json.dumps(blockchain.unconfirmed_transactions)
-
-
 def register_with_existing_node(request):
     """
     Internally calls the `register_node` endpoint to
@@ -267,3 +261,19 @@ def get_all_transactions():
             tmp['block_Id'] = block.height
             transactions.append(tmp)
     return transactions
+
+
+def get_pending_tx(*args, **kwargs):
+    unconfirmed_transactions = []
+    for transaction in blockchain.unconfirmed_transactions:
+        unconfirmed_transactions.append(eval(transaction))
+    return unconfirmed_transactions
+
+
+def get_blockchain(*args, **kwargs):
+    chain = []
+    for block in blockchain.chain:
+        blk = block.__dict__
+        blk['trans_len'] = len(block.transactions)
+        chain.append(blk)
+    return chain

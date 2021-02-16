@@ -6,6 +6,8 @@ from requests import post as request_post
 from users.models import Profile
 from miner.views import get_result
 from miner.views import get_all_transactions
+from miner.views import get_pending_tx
+from miner.views import get_blockchain
 from miner.views import register_with_existing_node
 from users.models import Candidate
 from .models import KeyModel
@@ -86,6 +88,19 @@ def transaction_view(request, *args, **kwargs):
     transactions = get_all_transactions()
     # return render(request, "home_page.html", {'head': 'Transactions', 'message': transactions})
     return render(request, "transaction_page.html", {'transactions': transactions})
+
+
+# unconfirmed_transactions view
+def pending_tx_view(request, *args, **kwargs):
+    transactions = get_pending_tx()
+    print(transactions)
+    return render(request, "pending_transaction_page.html", {'transactions': transactions})
+
+
+# blockchain view
+def blockchain_view(request, *args, **kwargs):
+    chain = get_blockchain()
+    return render(request, "blockchain_page.html", {'blockchain': chain})
 
 
 # home view
