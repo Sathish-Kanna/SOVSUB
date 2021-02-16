@@ -53,13 +53,13 @@
     <div class="" align="center">
         <div id="div_l" class="split left">
             {% if user.is_authenticated %}
-                <button style="margin: 10px; " onclick=loadOnButtonPress("/reg/")><span class="glyphicon glyphicon-link"></span> Register Node</button>
+                <button style="margin: 10px; " onclick=loadOnButtonPress("/reg/")><span class="glyphicon glyphicon-pencil"></span> Register Node</button>
                 <br>
-                <button style="margin: 10px; " onclick=loadOnButtonPress("/miner/mine/")><span class="glyphicon glyphicon-shopping-cart"></span> Mine Transaction</button>
+                <button style="margin: 10px; " onclick=loadOnButtonPress("/miner/mine/")><span class="glyphicon glyphicon-file"></span> Mine Transaction</button>
                 <br>
                 <button style="margin: 10px; " onclick=loadOnButtonPress("/pending_transaction_view/")><span class="glyphicon glyphicon-shopping-cart"></span> Pending Transaction</button>
             <br>
-                <button style="margin: 10px; " onclick=loadOnButtonPress("/blockchain_view/")><span class="glyphicon glyphicon-shopping-cart"></span> Blockchain</button>
+                <button style="margin: 10px; " onclick=loadOnButtonPress("/blockchain_view/")><span class="glyphicon glyphicon-link"></span> Blockchain</button>
             {% endif %}
         </div>
 
