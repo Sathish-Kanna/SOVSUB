@@ -42,6 +42,7 @@ def set_new_transaction(request, *args, **kwargs):
         # update the KeyModel of that voter so next time the user can't vote
         keymodel = KeyModel.objects.get(temp_id=data.get('tempid'))
         keymodel.voted = True
+        keymodel.save()
         return HttpResponse("Success", 201)
     else:
         return HttpResponse("Unauthorized transaction data", 401)
